@@ -9,6 +9,7 @@
 Run next command:
 
 `./gradlew clean build`
+During the build tests will be run. There is test which run a diff between files from the task.
 
 jar file will be accessible by the path `build/libs/parallel-diff-1.0-SNAPSHOT.jar`
 

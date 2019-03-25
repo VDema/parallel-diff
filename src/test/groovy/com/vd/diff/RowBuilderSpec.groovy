@@ -20,14 +20,14 @@ class RowBuilderSpec extends Specification {
             "05c-8\t(2 14 null)"                    |
                     new Row(
                             "05c-8\t(2 14 null)",
-                            "05c-8", ["2 14 null": new Row.Event(2 as int, 14l, null)
+                            "05c-8", ["2-14": new Row.Event("2 14 null", 2 as int, 14l, null)
                     ])
             "05c-8\t(2 14 null)(2 15 app.agg.ccom)" |
                     new Row(
                             "05c-8\t(2 14 null)(2 15 app.agg.ccom)",
                             "05c-8", [
-                            "2 14 null"        : new Row.Event(2 as int, 14l, null),
-                            "2 15 app.agg.ccom": new Row.Event(2 as int, 15l, "app.agg.ccom")
+                            "2-14": new Row.Event("2 14 null", 2 as int, 14l, null),
+                            "2-15": new Row.Event("2 15 app.agg.ccom", 2 as int, 15l, "app.agg.ccom")
                     ])
 
     }
