@@ -7,8 +7,8 @@
 **Building**
 
 Run next command:
-
-`./gradlew clean build`
+1. `cd parallel-diff/`
+2. `./gradlew clean build`
 During the build tests will be run. There is test which run a diff between files from the task.
 
 jar file will be accessible by the path `build/libs/parallel-diff-1.0-SNAPSHOT.jar`
@@ -22,6 +22,9 @@ Example:
 
 `aus-28-2002` and `aws-28-2002` files are expected to be in the same directory. 
 `-i1` and `-i2` are required options and consumes relative paths to the files to diff. `-o` is optional and will be defaulted.
+
+The working example is from the `parallel-diff` dir is (build project first):
+`java -jar build/libs/parallel-diff-1.0-SNAPSHOT.jar -i1 src/main/resources/aus-28-2002 -i2 src/main/resources/aws-28-2002 -o out.txt`
 
 **Verifying**
 
