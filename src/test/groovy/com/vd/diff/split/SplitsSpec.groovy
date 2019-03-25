@@ -1,4 +1,4 @@
-package com.vd.diff
+package com.vd.diff.split
 
 import com.vd.diff.split.file.FileSplit
 import com.vd.diff.split.file.FileSplits

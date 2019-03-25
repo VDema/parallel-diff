@@ -1,9 +1,9 @@
 package com.vd.diff.split.virtual;
 
 import com.vd.diff.split.AbstractSplits;
+import com.vd.diff.split.SplitIntersection;
 import com.vd.diff.split.file.FileSplit;
 import com.vd.diff.split.file.FileSplits;
-import com.vd.diff.split.SplitIntersection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

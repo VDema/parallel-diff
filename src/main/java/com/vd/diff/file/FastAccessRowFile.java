@@ -1,7 +1,7 @@
 package com.vd.diff.file;
 
 import com.vd.diff.content.Row;
-import com.vd.diff.content.parser.RowBuilder;
+import com.vd.diff.content.parser.RowParser;
 import com.vd.diff.utils.FileUtils;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -98,7 +98,7 @@ public class FastAccessRowFile implements AutoCloseable {
 
     public Row nextRow() throws IOException {
         return Optional.ofNullable(delegate.readLine())
-                .map(RowBuilder::toRow)
+                .map(RowParser::toRow)
                 .orElse(null);
     }
 
@@ -120,7 +120,7 @@ public class FastAccessRowFile implements AutoCloseable {
 
             long offset = splitOffset + 1;
             checkState(offset, rawRow);
-            return new OffsetRow(offset, RowBuilder.toRow(rawRow));
+            return new OffsetRow(offset, RowParser.toRow(rawRow));
         }
 
         delegate.readLine();
@@ -128,7 +128,7 @@ public class FastAccessRowFile implements AutoCloseable {
         String nextLine = delegate.readLine();
 
         checkState(lineOffset, nextLine);
-        return new OffsetRow(lineOffset, RowBuilder.toRow(nextLine));
+        return new OffsetRow(lineOffset, RowParser.toRow(nextLine));
     }
 
     private void checkState(long lineOffset, String expectedLine) throws IOException {
@@ -161,7 +161,7 @@ public class FastAccessRowFile implements AutoCloseable {
     }
 
     private Row extractFirstRow() {
-        return RowBuilder.toRow(extractRawFirstLine());
+        return RowParser.toRow(extractRawFirstLine());
     }
 
     private String extractRawFirstLine() {
@@ -174,7 +174,7 @@ public class FastAccessRowFile implements AutoCloseable {
     }
 
     private Row extractLastRow() throws IOException {
-        return RowBuilder.toRow(extractLastRawLine(longestLineInBytes));
+        return RowParser.toRow(extractLastRawLine(longestLineInBytes));
     }
 
     private String extractLastRawLine(int shiftByteSize) throws IOException {

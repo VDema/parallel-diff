@@ -2,7 +2,7 @@ package com.vd.diff.file;
 
 import com.google.common.base.Preconditions;
 import com.vd.diff.content.Row;
-import com.vd.diff.content.parser.RowBuilder;
+import com.vd.diff.content.parser.RowParser;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -32,7 +32,7 @@ public class BufferedRowReader {
             return null;
         }
 
-        return RowBuilder.toRow(bufferedLines.pollFirst());
+        return RowParser.toRow(bufferedLines.pollFirst());
     }
 
     private void fillBuffer() throws IOException {

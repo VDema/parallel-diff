@@ -1,4 +1,4 @@
-package com.vd.diff
+package com.vd.diff.split
 
 import com.vd.diff.split.SplitService
 import spock.lang.Specification

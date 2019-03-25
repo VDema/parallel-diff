@@ -1,16 +1,15 @@
-package com.vd.diff
+package com.vd.diff.file
 
 import com.vd.diff.content.Row
-import com.vd.diff.file.FastAccessRowFile
 import com.vd.diff.utils.FileUtils
 import spock.lang.Specification
 
-class RandomAccessReadOnlySortedFileSpec extends Specification {
+class FastAccessRowFileSpec extends Specification {
 
     def "Upon the create RandomAccessFile firstRow and Last row should be read"() {
         given:
-            def fileA = FileUtils.getFileFromResources("/aus-28-2002", RandomAccessReadOnlySortedFileSpec.class)
-            def fileB = FileUtils.getFileFromResources("/aws-28-2002", RandomAccessReadOnlySortedFileSpec.class)
+            def fileA = FileUtils.getFileFromResources("/aus-28-2002", FastAccessRowFileSpec.class)
+            def fileB = FileUtils.getFileFromResources("/aws-28-2002", FastAccessRowFileSpec.class)
 
         when:
             def rAFA = new FastAccessRowFile(fileA, 2 as int)

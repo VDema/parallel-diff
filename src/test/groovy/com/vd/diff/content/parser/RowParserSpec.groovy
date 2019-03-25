@@ -1,16 +1,15 @@
-package com.vd.diff
+package com.vd.diff.content.parser
 
 import com.vd.diff.content.Row
-import com.vd.diff.content.parser.RowBuilder
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class RowBuilderSpec extends Specification {
+class RowParserSpec extends Specification {
 
     @Unroll
     def "ToRow function should parse raw row into the Instance"() {
         when:
-            def actualRow = RowBuilder.toRow(rawRow)
+            def actualRow = RowParser.toRow(rawRow)
 
         then:
             actualRow == expectedRow

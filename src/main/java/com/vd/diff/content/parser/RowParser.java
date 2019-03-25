@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
-public class RowBuilder {
+public class RowParser {
     private final static Pattern VALUE_PATTERN = Pattern.compile("(\\d+)\\s+(\\d+)\\s(.+)");
 
     public static Row toRow(String rawRow) {

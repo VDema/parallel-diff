@@ -1,10 +1,10 @@
-package com.vd.diff
+package com.vd.diff.split.virtual
 
 import com.vd.diff.split.virtual.VirtualSplit
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class SplitSpec extends Specification {
+class VirtualSplitSpec extends Specification {
 
     @Unroll
     def "isIntersects should check range of start/stop keys and detect if ranges intersects symmetrically"() {
