@@ -26,7 +26,7 @@ Example:
 **Verifying**
 
 `diff` directory will be created with diff chunks. 
-`out.txt` or defaulter `eventsDiff.txt` will be created with merged chunks. 
+`out.txt` or defaulted `eventsDiff.txt` will be created with merged chunks. 
 
 Also it's possible to check the logs from the console output or `$HOME` file with detailed statistic and metrics.
 Example:
