@@ -26,8 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 public class DiffService {
 
     private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
-    private static final int DEFAULT_SPLITS_NUM = AVAILABLE_PROCESSORS * 3;
-    private static final int TAKEN_PROCESSORS = AVAILABLE_PROCESSORS - 1;
+    private static final int PROCESSORS_TO_USE = AVAILABLE_PROCESSORS - 1;
+    private static final int DEFAULT_SPLITS_NUM = PROCESSORS_TO_USE * 2;
+
+    private static final long _32MB_IN_BYTES = 33554432L;
 
     private DiffMerger diffMerger = new DiffMerger();
 
@@ -35,14 +37,17 @@ public class DiffService {
         try (FastAccessRowFile accessFileA = new FastAccessRowFile(fileA);
              FastAccessRowFile accessFileB = new FastAccessRowFile(fileB)) {
 
-            FileSplits splitsA = SplitService.split(accessFileA, DEFAULT_SPLITS_NUM);
-            FileSplits splitsB = SplitService.split(accessFileB, DEFAULT_SPLITS_NUM);
+            int fileASplitsNum = getSplitNum(accessFileA.getFileSize(), DEFAULT_SPLITS_NUM);
+            int fileBSplitsNum = getSplitNum(accessFileB.getFileSize(), DEFAULT_SPLITS_NUM);
+
+            FileSplits splitsA = SplitService.split(accessFileA, fileASplitsNum);
+            FileSplits splitsB = SplitService.split(accessFileB, fileBSplitsNum);
 
             String commonStartKey = KeyUtils.lowerKey(accessFileA.getFirstRowKey(), accessFileB.getFirstRowKey());
             String commonStopKey = KeyUtils.higherKey(accessFileA.getLastRowKey(), accessFileB.getLastRowKey());
 
             List<SplitIntersection> intersections = SplitService
-                    .splitRange(commonStartKey, commonStopKey, DEFAULT_SPLITS_NUM)
+                    .splitRange(commonStartKey, commonStopKey, Math.max(fileASplitsNum, fileBSplitsNum))
                     .intersections(splitsA, splitsB);
 
             intersections.forEach(SplitIntersection::validate);
@@ -69,6 +74,14 @@ public class DiffService {
         }
     }
 
+    private int getSplitNum(long fileSize, int defaultSplitsNum) {
+        if (fileSize > (_32MB_IN_BYTES * defaultSplitsNum)) {
+            return (int) (fileSize / _32MB_IN_BYTES);
+        } else {
+            return defaultSplitsNum;
+        }
+    }
+
     private static void logTheDiffProcessReport(List<DiffTask.DiffResult> diffResults) {
         DiffReport diffReport = diffResults.stream()
                 .map(DiffTask.DiffResult::getDiffReport)
@@ -76,12 +89,12 @@ public class DiffService {
                 .reduce(DiffReport.builder().build(), DiffReport::merge);
 
         log.info("Total diff result: {}. Within Threads: {}. Approximate diff time: {}",
-                diffReport, TAKEN_PROCESSORS, diffReport.getTimeElapsed() / TAKEN_PROCESSORS);
+                diffReport, PROCESSORS_TO_USE, diffReport.getTimeElapsed() / PROCESSORS_TO_USE);
     }
 
     private static List<DiffTask.DiffResult> executeDiffTasks(List<DiffTask> diffTasks) {
         ExecutorService executorService = Executors
-                .newFixedThreadPool(TAKEN_PROCESSORS, DiffThreadFactory.create("parallel-diff"));
+                .newFixedThreadPool(PROCESSORS_TO_USE, DiffThreadFactory.create("parallel-diff"));
 
         List<Future<DiffTask.DiffResult>> diffTaskFutures = diffTasks.stream()
                 .map(executorService::submit)

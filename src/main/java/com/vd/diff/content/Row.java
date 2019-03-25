@@ -1,8 +1,11 @@
 package com.vd.diff.content;
 
 import com.google.common.base.Preconditions;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Data;
@@ -33,34 +36,47 @@ public class Row {
     public String diffEvents(Row anotherRow) {
         Preconditions.checkState(key.equals(anotherRow.key));
 
-        Map<String, Event> thisNewEvents = findDifferentEvents(events, anotherRow.events);
-        Map<String, Event> anotherNewEvents = findDifferentEvents(anotherRow.events, events);
+        List<Event> thisNewEvents = findDifferentEvents(events, anotherRow.events);
+        List<Event> anotherNewEvents = findDifferentEvents(anotherRow.events, events);
 
         Set<String> differentRawEvents = new HashSet<>();
 
-        differentRawEvents.addAll(thisNewEvents.keySet());
-        differentRawEvents.addAll(anotherNewEvents.keySet());
+        differentRawEvents.addAll(convertToRaw(thisNewEvents));
+        differentRawEvents.addAll(convertToRaw(anotherNewEvents));
 
-        return key + "\t" + String.join(":", differentRawEvents);
+        return key + "\t" + "(" + String.join(")(", differentRawEvents) + ")";
     }
 
-    private Map<String, Event> findDifferentEvents(Map<String, Event> events, Map<String, Event> anotherEvents) {
+    private Set<String> convertToRaw(Collection<Event> events) {
+        return events.stream()
+                .map(Event::getRawEvent)
+                .collect(Collectors.toSet());
+    }
+
+    private List<Event> findDifferentEvents(Map<String, Event> events, Map<String, Event> otherEvents) {
         return events.entrySet()
                 .stream()
-                .filter(e -> anotherEvents.get(e.getKey()) == null)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .filter(e -> {
+                    String eventKey = e.getKey();
+                    Event event = e.getValue();
+
+                    Event otherEvent = otherEvents.get(eventKey);
+
+                    if (otherEvent == null) {
+                        return true;
+                    } else {
+                        return !Objects.equals(event.host, otherEvent.host);
+                    }
+                })
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
     }
 
     @Data
     public static class Event {
+        private final String rawEvent;
         private final Integer num;
         private final Long timestamp;
         private final String host;
-
-        public Event(Integer num, Long timestamp, String host) {
-            this.num = num;
-            this.timestamp = timestamp;
-            this.host = host;
-        }
     }
 }

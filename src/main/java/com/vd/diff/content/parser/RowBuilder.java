@@ -19,7 +19,7 @@ public class RowBuilder {
         String[] keyAndValues = rawRow.split("\t");
 
         if (keyAndValues.length < 2) {
-           throw new IllegalStateException("Unexpected record");
+            throw new IllegalStateException("Unexpected record");
         }
 
         String rawKey = keyAndValues[0];
@@ -50,12 +50,13 @@ public class RowBuilder {
             String rawHost = valueMatcher.group(3);
 
             Row.Event rowValue = new Row.Event(
+                    rawEvent,
                     Integer.parseInt(rawEventId),
                     Long.parseLong(rawCreated),
                     rawHost.equalsIgnoreCase("null") ? null : rawHost
             );
 
-            events.put(rawEvent, rowValue);
+            events.put(rawEventId + "-" + rawCreated, rowValue);
         }
         return events;
     }

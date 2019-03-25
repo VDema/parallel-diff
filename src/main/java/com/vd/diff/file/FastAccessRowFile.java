@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 public class FastAccessRowFile implements AutoCloseable {
 
@@ -86,8 +84,16 @@ public class FastAccessRowFile implements AutoCloseable {
         delegate.seek(pos);
     }
 
+    public long pos() throws IOException {
+        return delegate.getFilePointer();
+    }
+
     public int readNext(byte[] bytes) throws IOException {
         return delegate.read(bytes, 0, bytes.length);
+    }
+
+    public int readNext(byte[] bytes, int len) throws IOException {
+        return delegate.read(bytes, 0, len);
     }
 
     public Row nextRow() throws IOException {
@@ -133,17 +139,6 @@ public class FastAccessRowFile implements AutoCloseable {
         }
     }
 
-    @AllArgsConstructor
-    @Getter
-    public static class OffsetRow {
-        private final long offset;
-        private final Row row;
-
-        public String getRowKey() {
-            return row.getKey();
-        }
-    }
-
     @Override
     public void close() {
         FileUtils.closeSilently(delegate);
@@ -179,10 +174,10 @@ public class FastAccessRowFile implements AutoCloseable {
     }
 
     private Row extractLastRow() throws IOException {
-        return RowBuilder.toRow(extractRawLastLine(longestLineInBytes));
+        return RowBuilder.toRow(extractLastRawLine(longestLineInBytes));
     }
 
-    private String extractRawLastLine(int shiftByteSize) throws IOException {
+    private String extractLastRawLine(int shiftByteSize) throws IOException {
         if (shiftByteSize >= fileSize) {
             throw new IllegalArgumentException("Shift byte size if too big");
         }
@@ -203,7 +198,7 @@ public class FastAccessRowFile implements AutoCloseable {
         if (prevLine == null) {
             //Record size is more then batch size, so needs to increase batch size.
             //StackOverflowError is possible. Should Be TailRecursion
-            return extractRawLastLine(shiftByteSize * 2);
+            return extractLastRawLine(shiftByteSize * 2);
         }
 
         return lastLine;

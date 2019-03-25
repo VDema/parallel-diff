@@ -5,7 +5,9 @@ import com.google.common.base.Stopwatch;
 import com.vd.diff.compare.report.DiffMetrics;
 import com.vd.diff.compare.report.DiffReport;
 import com.vd.diff.content.Row;
+import com.vd.diff.file.BufferedRowReader;
 import com.vd.diff.file.FastAccessRowFile;
+import com.vd.diff.file.OffsetRow;
 import com.vd.diff.split.SplitIntersection;
 import com.vd.diff.split.file.FileSplit;
 import java.io.BufferedWriter;
@@ -19,8 +21,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
 @Builder
@@ -48,10 +48,11 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
             DiffReport.DiffReportBuilder reportBuilder = diffSplits(writer);
             stopwatch.stop();
 
-            reportBuilder
-                    .timeElapsed(stopwatch.elapsed(TimeUnit.MILLISECONDS));
+            DiffReport report = reportBuilder
+                    .timeElapsed(stopwatch.elapsed(TimeUnit.MILLISECONDS))
+                    .build();
 
-            return new DiffResult(file, reportBuilder.build());
+            return new DiffResult(file, report);
         }
     }
 
@@ -73,8 +74,13 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
                     .rightSkippedRows(intersection.tryRight().isPresent() ? skippedRows : 0);
         }
 
-        FileSplit leftSplit = intersection.tryLeft().get();
-        FileSplit rightSplit = intersection.tryRight().get();
+        return diffSplits(writer, intersection.tryLeft().get(), intersection.tryRight().get());
+    }
+
+    private DiffReport.DiffReportBuilder diffSplits(
+            BufferedWriter writer,
+            FileSplit leftSplit,
+            FileSplit rightSplit) throws IOException {
 
         leftRowFile.seek(leftSplit.getStartKeyOffset());
         rightRowFile.seek(rightSplit.getStartKeyOffset());
@@ -94,24 +100,28 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
         Row leftRow = leftSearchRes.row;
         Row rightRow = rightSearchRes.row;
 
-        DiffMetrics.MetricsAggregator metricsAggregator = new DiffMetrics.MetricsAggregator();
+        DiffMetrics.MetricsAggregator metrics = new DiffMetrics.MetricsAggregator();
         BufferedRowReader leftReader = new BufferedRowReader(leftRowFile);
         BufferedRowReader rightReader = new BufferedRowReader(rightRowFile);
 
         while (leftRow != null && rightRow != null) {
             if (leftRow.isKeyLower(rightRow)) {
                 writeLine(writer, leftRow.getRaw());
-                metricsAggregator.newLeft();
+                metrics.newLeft();
 
                 leftRow = nextRow(leftReader);
             } else if (leftRow.isKeyGreater(rightRow)) {
                 writeLine(writer, rightRow.getRaw());
-                metricsAggregator.newRight();
+                metrics.newRight();
 
                 rightRow = nextRow(rightReader);
             } else {
-                writeLine(writer, leftRow.diffEvents(rightRow));
-                metricsAggregator.differentEvents();
+                if (!leftRow.getRaw().equals(rightRow.getRaw())) {
+                    writeLine(writer, leftRow.diffEvents(rightRow));
+                    metrics.differentEvents();
+                } else {
+                    metrics.sameLines();
+                }
 
                 leftRow = nextRow(leftReader);
                 rightRow = nextRow(rightReader);
@@ -130,7 +140,7 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
         return DiffReport.builder()
                 .leftSkippedRows(leftSkippedRows)
                 .rightSkippedRows(rightSkippedRows)
-                .metrics(metricsAggregator.getMetrics());
+                .metrics(metrics.getMetrics());
     }
 
     private SearchRowResult findFirstWithin(FastAccessRowFile rowFile, FileSplit split) throws IOException {
@@ -148,13 +158,13 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
         rowFile.seek(split.getStartKeyOffset());
         Row row = rowFile.nextRow();
 
-        FastAccessRowFile.OffsetRow curRow = new FastAccessRowFile.OffsetRow(split.getStartKeyOffset(), row);
+        OffsetRow curRow = new OffsetRow(split.getStartKeyOffset(), row);
         Preconditions.checkState(curRow.getRowKey().equals(split.getStartKey()));
 
         long startPos = split.getStartKeyOffset();
         long endPos = split.getStopKeyOffset();
 
-        FastAccessRowFile.OffsetRow closestRow = curRow;
+        OffsetRow closestRow = curRow;
 
         while (endPos - startPos > rowFile.getLongestLineInBytes()) {
             long mid = startPos + (endPos - startPos) / 2;
@@ -216,23 +226,6 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
         writer.write(val + "\n");
     }
 
-    @AllArgsConstructor
-    @ToString
-    private static class SearchRowResult {
-        private final Row row;
-        private final int rowsSkipped;
-
-        boolean exists() {
-            return row != null;
-        }
-
-        boolean empty() {
-            return !exists();
-        }
-    }
-
-    //ToDo: func should use buffered read instead of read byte by byte
-    //ToDo: this implementation is completely inefficient
     private Row nextRow(BufferedRowReader reader) throws IOException {
         Row row;
 
@@ -248,35 +241,6 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
         }
 
         return null;
-    }
-
-    private class BufferedRowReader {
-        private final FastAccessRowFile delegate;
-
-        BufferedRowReader(FastAccessRowFile delegate) {
-            this.delegate = delegate;
-        }
-
-        private byte[] byteBuffer = new byte[1024];
-
-        private String buffer;
-
-        private Row nextRow() throws IOException {
-            return delegate.nextRow();
-        }
-
-        private Row nextBufferedRow() throws IOException {
-            if (StringUtils.isBlank(buffer)) {
-                int readAmount = delegate.readNext(byteBuffer);
-                if (readAmount <= 0) {
-                    return null;
-                }
-            }
-
-            int nextLinePos = buffer.indexOf("\n");
-
-            throw new NotImplementedException("This functionality still not implemented");
-        }
     }
 
     private int writeRecordsWithinAndReturnSkipped(FastAccessRowFile rowFile, BufferedWriter diffChannel) throws IOException {
@@ -301,6 +265,21 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
         return diffDir.getName() + "/diff_" + intersectionFileOrderNum + ".txt";
     }
 
+    @AllArgsConstructor
+    @ToString
+    private static class SearchRowResult {
+        private final Row row;
+        private final int rowsSkipped;
+
+        boolean exists() {
+            return row != null;
+        }
+
+        boolean empty() {
+            return !exists();
+        }
+    }
+
     @Getter
     @AllArgsConstructor
     public class DiffResult {
@@ -311,5 +290,4 @@ public class DiffTask implements Callable<DiffTask.DiffResult> {
             return intersectionFileOrderNum;
         }
     }
-
 }

@@ -16,6 +16,8 @@ sourceSets {
     test {
         resources {
             srcDir 'src/test/resources'
+            include 'src/main/resources/aus-28-2002'
+            include 'src/main/resources/aws-28-2002'
             include 'src/main/resources/log4j.properties'
         }
     }

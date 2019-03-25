@@ -1,6 +1,7 @@
 package com.vd.diff.split;
 
 import com.vd.diff.file.FastAccessRowFile;
+import com.vd.diff.file.OffsetRow;
 import com.vd.diff.split.file.FilePosition;
 import com.vd.diff.split.virtual.VirtualFilePosition;
 import com.vd.diff.split.file.FileSplit;
@@ -28,7 +29,7 @@ public class SplitService {
 
         for (int splitNum = 1; splitNum < splitAmount; splitNum++) {
             long splitOffset = byteSizeOffset * splitNum;
-            FastAccessRowFile.OffsetRow row = file.nextRow(splitOffset);
+            OffsetRow row = file.nextRow(splitOffset);
 
             filePositions.add(new FilePosition(row.getRowKey(), row.getOffset()));
         }
