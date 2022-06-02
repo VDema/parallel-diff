@@ -1,8 +1,6 @@
 pipeline {
 
-    agent {
-        label 'agent any' //The id of the slave/agent where the build should be executed, if it doesn't matter use "agent any" instead.
-    }
+    agent any
 
     triggers {
         cron('H */8 * * *') //regular builds
@@ -10,7 +8,7 @@ pipeline {
     }
 
     stages {
-        stage('Build project') {
+        stage('Build') {
             steps {
                 script {
                     sh './gradlew clean build' //run a gradle task
