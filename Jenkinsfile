@@ -22,12 +22,13 @@ pipeline {
 //         }
     }
     post {
+        def recipients = [
+            emailextrecipients([
+                    [$class: 'CulpritsRecipientProvider'],
+                    [$class: 'RequesterRecipientProvider']
+            ])
+        ]
         always { //Send an email to the person that broke the build
-            def recipients = [
-                    emailextrecipients([
-                            [$class: 'CulpritsRecipientProvider'],
-                            [$class: 'RequesterRecipientProvider']])
-            ]
             step([
                     $class                  : 'Mailer',
                     notifyEveryUnstableBuild: true,
