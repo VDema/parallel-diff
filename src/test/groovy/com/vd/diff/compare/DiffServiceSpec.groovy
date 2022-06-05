@@ -21,6 +21,9 @@ class DiffServiceSpec extends Specification {
     }
 
     def "Always fail"() {
-        Preconditions.checkArgument(false);
+        when:
+            println "will fail"
+        then:
+            false
     }
 }
