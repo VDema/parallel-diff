@@ -2,8 +2,10 @@ package com.vd.diff.file
 
 import com.vd.diff.content.Row
 import com.vd.diff.utils.FileUtils
+import spock.lang.Ignore
 import spock.lang.Specification
 
+@Ignore
 class FastAccessRowFileSpec extends Specification {
 
     def "Upon the create RandomAccessFile firstRow and Last row should be read"() {

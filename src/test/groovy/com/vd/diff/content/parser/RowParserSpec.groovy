@@ -1,9 +1,11 @@
 package com.vd.diff.content.parser
 
 import com.vd.diff.content.Row
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
+@Ignore
 class RowParserSpec extends Specification {
 
     @Unroll

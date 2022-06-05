@@ -1,8 +1,10 @@
 package com.vd.diff.split
 
 import com.vd.diff.split.SplitService
+import spock.lang.Ignore
 import spock.lang.Specification
 
+@Ignore
 class SplitServiceSpec extends Specification {
 
     def "SplitService should split range by provided number of splits"() {

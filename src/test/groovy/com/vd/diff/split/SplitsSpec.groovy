@@ -3,8 +3,10 @@ package com.vd.diff.split
 import com.vd.diff.split.file.FileSplit
 import com.vd.diff.split.file.FileSplits
 import com.vd.diff.split.virtual.VirtualSplits
+import spock.lang.Ignore
 import spock.lang.Specification
 
+@Ignore
 class SplitsSpec extends Specification {
 
     def "Intersections should check splits for intersections and create pairs where closed splits should be joined"() {

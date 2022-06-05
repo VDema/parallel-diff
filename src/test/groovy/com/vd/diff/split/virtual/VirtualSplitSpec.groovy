@@ -1,9 +1,11 @@
 package com.vd.diff.split.virtual
 
 import com.vd.diff.split.virtual.VirtualSplit
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
+@Ignore
 class VirtualSplitSpec extends Specification {
 
     @Unroll
