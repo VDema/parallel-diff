@@ -20,7 +20,6 @@ class DiffServiceSpec extends Specification {
             diff
     }
 
-    @Ignore
     def "Always fail"() {
         Preconditions.checkArgument(false);
     }
