@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DiffService {
 
-    private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
+    private static final int AVAILABLE_PROCESSORS = 4;
     private static final int PROCESSORS_TO_USE = AVAILABLE_PROCESSORS - 1;
     private static final int DEFAULT_SPLITS_NUM = PROCESSORS_TO_USE * 2;
 
